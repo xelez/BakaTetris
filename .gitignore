@@ -1,5 +1,9 @@
-# Qt Build directories
+# Vim
+*.swp
+
+# Qt
 build*/
+*.pro.user
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

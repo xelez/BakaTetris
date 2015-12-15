@@ -1,7 +1,10 @@
 var express = require('express');
 
 var jwt = require("jsonwebtoken");
-var MongoClient = require('mongodb').MongoClient
+var mongo = require('mongodb');
+
+var MongoClient = mongo.MongoClient;
+var ObjectID = mongo.ObjectID;
 var HttpError = require('./error').HttpError;
 
 var router = express.Router();
@@ -69,15 +72,64 @@ router.get('/games', function(req, res, next) {
 });
 
 router.get('/games/open', function(req, res) {
-    res.send('hello');
+    db.collection('games').find({'state': 'open'}, {'creator': 1}).toArray(function(err, items) {
+        if (err) throw err;
+        res.json(items);
+    });
 });
 
 router.post('/games', function(req, res) {
-    res.send('hello');
+    var server_ip = '127.0.0.1:3001';
+
+    game = {
+        'creator'  : req.user,
+        'opponent' : null,
+        'server'   : server_ip,
+        'state'    : 'open',
+    };
+
+    db.collection('games').insertOne(game, function(err, result) {
+        if (err) throw err;
+        var game_id = result.ops[0]._id;
+
+        var token = jwt.sign({
+            'user' : req.user,
+            'server' : server_ip,
+            'game_id' : game_id,
+            'act' : 'create'
+        }, secret);
+
+        res.json({
+            'game_id' : game_id,
+            'game_server_ip' : server_ip,
+            'create_game_token' : token
+        });
+    });
 });
 
-router.post('/game/:id/join', function(req, res) {
-    res.send('hello');
+router.post('/game/:id/join', function(req, res, next) {
+    var id = ObjectID.createFromHexString(req.params.id);
+    
+    db.collection('games').findOneAndUpdate(
+        {'_id' : id, 'state' : 'open'},
+        {$set : {'state' : 'opponent_found', 'opponent': req.user} },
+        function(err, r) {
+            if (err || !r.value)
+                return next(new HttpError(404));
+
+            var game = r.value;
+            var token = jwt.sign({
+                'user' : req.user,
+                'server' : game.server,
+                'game_id' : game._id,
+                'act' : 'join'
+            }, secret);
+
+            res.json({
+                'game_server_ip' : game.server,
+                'join_game_token' : token
+            });
+    });
 });
 
 module.exports = router;

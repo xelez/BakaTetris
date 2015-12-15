@@ -1,9 +1,13 @@
 var express = require('express');
+
+var jwt = require("jsonwebtoken");
 var MongoClient = require('mongodb').MongoClient
 var HttpError = require('./error').HttpError;
 
 var router = express.Router();
 var db;
+
+var secret = "verysecretdevbaka";
 
 MongoClient.connect("mongodb://localhost:27017/bakatetris", function(err, database) {
     if (err) throw err;
@@ -23,7 +27,7 @@ router.post('/signup', function(req, res, next) {
         if (err)
             return next(new HttpError(400, "User already exists"));
             // TODO: change error code
-        var token = "123";
+        var token = jwt.sign({user:user}, secret);
         res.json({token: token});
     });
 });
@@ -42,10 +46,23 @@ router.post('/signin', function(req, res, next) {
         if (item.passwd != passwd)
             return next(new HttpError(404));
         
-        var token = "777";
+        var token = jwt.sign({user:user}, secret);
         res.json({token: token});
     });
 });
+
+router.all('/game*', function(req, res, next) {
+    var token = req.body.token;
+    if (!token)
+        return next(new HttpError(400));
+    
+    jwt.verify(token, secret, function(err, data) {
+        if (err)
+            return next(new HttpError(403));
+        req.user = data.user;
+        next();
+    });
+})
 
 router.get('/games', function(req, res, next) {
     return next(new HttpError(501)); // Not implemented

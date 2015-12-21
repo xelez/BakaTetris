@@ -24,7 +24,7 @@ Multicast - единственный актуальный способ найт�
 | /signin        | POST   | user, password | auth_token                                                |
 | /games         | GET    | auth_token     | список всех игр (нужно ли?)                               |
 | /games/open    | GET    | auth_token     | список игр, к которым можно присоедениться                |
-| /games         | POST   | auth_token     | game_id(id  новой игры), gameserver_ip, create_game_token |
+| /games         | POST   | auth_token     | game_id(id  новой игры), server_ip, create_token |
 
 
 Параметры передаются через json, возвращается опять же json.
@@ -69,7 +69,7 @@ Multicast - единственный актуальный способ найт�
 
 ```json
 {
-    "game_id" : 'asdfdsaf',
+    "game_id" : "asdfdsaf",
 }
 ```
 
@@ -77,8 +77,8 @@ Multicast - единственный актуальный способ найт�
 
 ```json
 {
-    "game_id" : 'asdfdsaf',
-    "opponent" : 'user',
+    "game_id" : "asdfdsaf",
+    "opponent" : "user",
 }
 ```
 
@@ -86,8 +86,8 @@ Multicast - единственный актуальный способ найт�
 
 ```json
 {
-    "game_id" : 'asdfdsaf',
-    "winner" : 'user',
+    "game_id" : "asdfdsaf",
+    "winner" : "user",
 }
 ```
 

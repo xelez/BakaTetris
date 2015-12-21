@@ -4,6 +4,7 @@ var logger     = require('morgan');
 
 var app = express();
 
+var config = require('../config');
 var routes = require('./routes');
 
 app.use(bodyParser.json());
@@ -28,7 +29,8 @@ if (app.get('env') === 'development') {
     res.status(err.status || 500);
     res.json({
       message: err.message,
-      error: err
+      error: err,
+      stack: err.stack
     });
   });
 }
@@ -43,7 +45,9 @@ app.use(function(err, req, res, next) {
 });
 
 
-var server = app.listen(3000, function() {
+var port = process.env.PORT || config.lobby_default_port;
+
+var server = app.listen(port, function() {
     var host = server.address().address;
     var port = server.address().port;
     

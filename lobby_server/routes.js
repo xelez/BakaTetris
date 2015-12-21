@@ -1,18 +1,16 @@
 var express = require('express');
-
 var jwt = require("jsonwebtoken");
 var mongo = require('mongodb');
-
 var MongoClient = mongo.MongoClient;
 var ObjectID = mongo.ObjectID;
 var HttpError = require('./error').HttpError;
+var rabbit = require('./rabbit');
+var config = require('../config');
 
 var router = express.Router();
 var db;
 
-var secret = "verysecretdevbaka";
-
-MongoClient.connect("mongodb://localhost:27017/bakatetris", function(err, database) {
+MongoClient.connect(config.mongo, function(err, database) {
     if (err) throw err;
     db = database;
     db.collection("users").ensureIndex("user", {unique: true}, function(err, index) {
@@ -30,7 +28,7 @@ router.post('/signup', function(req, res, next) {
         if (err)
             return next(new HttpError(400, "User already exists"));
             // TODO: change error code
-        var token = jwt.sign({user:user}, secret);
+        var token = jwt.sign({user:user}, config.secret);
         res.json({token: token});
     });
 });
@@ -39,17 +37,17 @@ router.post('/signin', function(req, res, next) {
     var collection = db.collection("users");
     var user = req.body.user || "";
     var passwd = req.body.password || "";
-    
+
     if (!user || !passwd)
         return next(new HttpError(400));
-    
+
     collection.findOne({'user': user}, function(err, item) {
         if (err || !item)
             return next(new HttpError(404));
         if (item.passwd != passwd)
             return next(new HttpError(404));
-        
-        var token = jwt.sign({user:user}, secret);
+
+        var token = jwt.sign({user:user}, config.secret);
         res.json({token: token});
     });
 });
@@ -58,8 +56,8 @@ router.all('/game*', function(req, res, next) {
     var token = req.body.token;
     if (!token)
         return next(new HttpError(400));
-    
-    jwt.verify(token, secret, function(err, data) {
+
+    jwt.verify(token, config.secret, function(err, data) {
         if (err)
             return next(new HttpError(403));
         req.user = data.user;
@@ -72,64 +70,80 @@ router.get('/games', function(req, res, next) {
 });
 
 router.get('/games/open', function(req, res) {
-    db.collection('games').find({'state': 'open'}, {'creator': 1}).toArray(function(err, items) {
+    db.collection('games').find(
+        {'state': 'open'},
+        {
+            'creator' : 1,
+            'server_ip' : 1,
+            'join_token' : 1
+        })
+    .toArray(function(err, items) {
         if (err) throw err;
         res.json(items);
     });
 });
 
 router.post('/games', function(req, res) {
-    var server_ip = '127.0.0.1:3001';
+    var game_id = new ObjectID();
 
-    game = {
-        'creator'  : req.user,
-        'opponent' : null,
-        'server'   : server_ip,
-        'state'    : 'open',
-    };
-
-    db.collection('games').insertOne(game, function(err, result) {
+    rabbit.rpc({"game_id" : game_id.toString()}, function(err, data) {
         if (err) throw err;
-        var game_id = result.ops[0]._id;
+        console.log(data);
 
-        var token = jwt.sign({
-            'user' : req.user,
-            'server' : server_ip,
-            'game_id' : game_id,
-            'act' : 'create'
-        }, secret);
+        game = {
+            '_id'          : game_id,
+            'creator'      : req.user,
+            'opponent'     : null,
+            'server_ip'    : data.server_ip,
+            'create_token' : data.create_token,
+            'join_token'   : data.join_token,
+            'state'        : 'init'
+        };
 
-        res.json({
-            'game_id' : game_id,
-            'game_server_ip' : server_ip,
-            'create_game_token' : token
+        db.collection('games').insertOne(game, function(err, result) {
+            if (err) throw err;
+
+            res.json({
+                'game_id' : game_id,
+                'server_ip' : game.server_ip,
+                'create_token' : game.create_token
+            });
         });
     });
 });
 
-router.post('/game/:id/join', function(req, res, next) {
-    var id = ObjectID.createFromHexString(req.params.id);
+rabbit.on('owner_connected', function(err, data) {
+    if (err) throw err;
+    console.log(data);
+    var id = ObjectID.createFromHexString(data.game_id);
     
-    db.collection('games').findOneAndUpdate(
+    db.collection('games').updateOne(
+        {'_id' : id, 'state' : 'init'},
+        {$set : {'state' : 'open'} });
+});
+
+rabbit.on('opponent_connected', function(err, data) {
+    if (err) throw err;
+    console.log(data);
+    var id = ObjectID.createFromHexString(data.game_id);
+
+    db.collection('games').updateOne(
         {'_id' : id, 'state' : 'open'},
-        {$set : {'state' : 'opponent_found', 'opponent': req.user} },
-        function(err, r) {
-            if (err || !r.value)
-                return next(new HttpError(404));
+        {$set : {
+            'state' : 'ingame',
+            'opponent': data.opponent} });
+});
 
-            var game = r.value;
-            var token = jwt.sign({
-                'user' : req.user,
-                'server' : game.server,
-                'game_id' : game._id,
-                'act' : 'join'
-            }, secret);
-
-            res.json({
-                'game_server_ip' : game.server,
-                'join_game_token' : token
-            });
-    });
+rabbit.on('game_ended', function(err, data) {
+    if (err) throw err;
+    console.log(data);
+    var id = ObjectID.createFromHexString(data.game_id);
+    
+    db.collection('games').updateOne(
+        {'_id' : id, 'state' : 'open'},
+        {$set : {
+            'state' : 'finished',
+            'winner': data.winner} });
 });
 
 module.exports = router;

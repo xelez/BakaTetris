@@ -88,7 +88,7 @@ router.post('/games', function(req, res) {
 
     rabbit.rpc({"game_id" : game_id.toString()}, function(err, data) {
         if (err) throw err;
-        console.log(data);
+        console.log('server for ', game_id, ' found: ', data);
 
         game = {
             '_id'          : game_id,
@@ -114,9 +114,9 @@ router.post('/games', function(req, res) {
 
 rabbit.on('owner_connected', function(err, data) {
     if (err) throw err;
-    console.log(data);
+    console.log('owner_connected', data);
     var id = ObjectID.createFromHexString(data.game_id);
-    
+
     db.collection('games').updateOne(
         {'_id' : id, 'state' : 'init'},
         {$set : {'state' : 'open'} });
@@ -124,7 +124,7 @@ rabbit.on('owner_connected', function(err, data) {
 
 rabbit.on('opponent_connected', function(err, data) {
     if (err) throw err;
-    console.log(data);
+    console.log('opponent_connected', data);
     var id = ObjectID.createFromHexString(data.game_id);
 
     db.collection('games').updateOne(
@@ -136,9 +136,9 @@ rabbit.on('opponent_connected', function(err, data) {
 
 rabbit.on('game_ended', function(err, data) {
     if (err) throw err;
-    console.log(data);
+    console.log('game_ended', data);
     var id = ObjectID.createFromHexString(data.game_id);
-    
+
     db.collection('games').updateOne(
         {'_id' : id, 'state' : 'open'},
         {$set : {

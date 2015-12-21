@@ -98,6 +98,7 @@ wss.on('connection', function connection(ws) {
     function check_game_start() {
         if (!game.first.user || !game.second.user)
             return;
+        console.log('game starting');
         game.state = 'started';
         delete games[game.id]; // we won't need to find again, so cleaning up
 
@@ -118,6 +119,7 @@ wss.on('connection', function connection(ws) {
     }
 
     function handle_lost(msg) {
+        console.log(user,' lost: ', msg);
         game.state = 'finished';
         game.winner = opponent.user;
 
@@ -153,6 +155,7 @@ wss.on('connection', function connection(ws) {
     });
 
     ws.on('close', function() {
+        console.log('close ', user);
         if (!user) return;
         //TODO: handle gracefully? send other player info about it?
     });

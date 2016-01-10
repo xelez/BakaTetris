@@ -36,13 +36,17 @@ void WSClient::onConnected()
 
 void WSClient::onTextMessageReceived(QString message)
 {
-    /*QJsonDocument json = QJsonDocument::fromJson(message);
+    QByteArray data;
+    data.append(message);
+    qDebug() << "recieved msg: " << data << "\n";
+    QJsonDocument json = QJsonDocument::fromJson(data);
+    //QJsonObject tmp = QJsonObject::
     QJsonObject jsonObject = json.object();
     QString msg_type = jsonObject["msg_type"].toString();
     if (msg_type == "opponent_connected")
     {
-
-    }
+        emit opponent_connected();
+    } /*
     else if (msg_type == "opponent_connected")
     {
 

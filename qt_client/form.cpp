@@ -180,6 +180,8 @@ void Form::connectToGameServer()
     wsclient = new WSClient(QUrl("ws://" + server_ip), token, game_id, join_token);
     connect(wsclient, SIGNAL(refused()), this, SLOT(connectionRefused()));
     connect(wsclient, SIGNAL(connected()), this, SLOT(connected()));
+    connect(wsclient, SIGNAL(opponent_connected()), this, SLOT(opponentConnected()));
+    connect(wsclient, SIGNAL(opponent_moved_block(int[][16])), this, SLOT(updateOpponentsField(int[][16])));
     wsclient->Open();
 }
 
@@ -245,6 +247,10 @@ void Form::updateOpponentsField(int field[][16])
 void Form::opponentConnected()
 {
     qDebug() << "gameStart!!!";
+    setMessage("");
+    newGame();
+    this->setFocus();
+    dropRandomBlock();
 }
 
 void Form::processPendingDatagrams()
@@ -520,6 +526,7 @@ void Form::keyPressEvent(QKeyEvent *event)
 {
     if (this->gameIsOver)
         return;
+    qDebug() << "key_press" << "\n";
     switch(event->key())
     {
         case Qt::Key_Left:

@@ -12,15 +12,20 @@ class WSClient : public QObject
 {
 Q_OBJECT
 public:
+    static const int fieldWidth = 10;
+    static const int fieldHeight = 16;
     explicit WSClient(const QUrl &url, QString auth_token, QString game_id, QString game_token, QObject *parent = Q_NULLPTR);
     void Open();
+    void sendGameOver();
+    void sendGameField(int field[][fieldWidth]);
     ~WSClient();
 
 Q_SIGNALS:
     void refused();
     void connected();
-    void opponent_connected();
-    void opponent_moved_block(int[][16]);
+    void opponent_connected(QString name);
+    void opponent_lost();
+    void opponent_moved_block(int [][10]);
 
 private Q_SLOTS:
     void closedWS();

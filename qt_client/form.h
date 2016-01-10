@@ -32,9 +32,9 @@ private:
 
     int cd;
 
-    static const int cellSize = 24;
     static const int fieldWidth = 10;
     static const int fieldHeight = 16;
+    static const int cellSize = 24;
     static const int fallingSpeed = 300;
 
     int playerGameField[fieldHeight][fieldWidth];
@@ -53,6 +53,8 @@ private:
     QString message;
     QString submessage;
     bool gameIsOver;
+
+    QString opponentName;
 
     QBasicTimer _timer;
     QBasicTimer _countdown;
@@ -101,7 +103,8 @@ public:
     ~Form();
 
 private slots:
-    void opponentConnected();
+    void opponentConnected(QString name);
+    void opponentLost();
     void authorizeBtnClicked();
     void registerBtnClicked();
     void dropRandomBlock();
@@ -113,7 +116,7 @@ private slots:
 
     void connectionRefused();
     void connected();
-    void updateOpponentsField(int field[][16]);
+    void updateOpponentsField(int field[][10]);
     void serverRefused();
 protected:
     void paintEvent(QPaintEvent *event);

@@ -40,19 +40,57 @@ void WSClient::onTextMessageReceived(QString message)
     data.append(message);
     qDebug() << "recieved msg: " << data << "\n";
     QJsonDocument json = QJsonDocument::fromJson(data);
-    //QJsonObject tmp = QJsonObject::
     QJsonObject jsonObject = json.object();
+
     QString msg_type = jsonObject["msg_type"].toString();
+
     if (msg_type == "opponent_connected")
     {
-        emit opponent_connected();
-    } /*
-    else if (msg_type == "opponent_connected")
-    {
-
+        QString user = jsonObject["opponent"].toString();
+        emit opponent_connected(user);
     }
-    server_ip  = jsonObject["server_ip"].toString();*/
-    //create_token = jsonObject["create_token"].toString();
+    else if (msg_type == "lost")
+    {
+        emit opponent_lost();
+    }
+    else if (msg_type == "game")
+    {
+        int field[16][10];
+        for (int i = 0; i < 16; i++)
+            for (int j = 0; j < 10; j++) {
+                field[i][j] = 0;
+            }
+        QJsonArray array = jsonObject["field"].toArray();
+        int x = 0;
+        foreach (const QJsonValue & value, array) {
+            QJsonObject obj = value.toObject();
+            field[x / 10][x % 10] = obj["n"].toInt();
+            x++;
+        }
+        emit opponent_moved_block(field);
+    }
+}
+
+void WSClient::sendGameOver()
+{
+    QString json = "{ \"msg_type\" : \"lost\" }";
+    m_webSocket.sendTextMessage(json.toUtf8());
+}
+
+void WSClient::sendGameField(int field[][fieldWidth])
+{
+    QString json = "{ \"field\" : [ ";
+    for (int i = 0; i < 16; i++)
+        for (int j = 0; j < 10; j++)
+        {
+            json += " { \"n\" : " + QString::number(field[i][j]) + " } ";
+            if (i != 15 || j != 9)
+            {
+                json += ",";
+            }
+        }
+    json += " ] }";
+    m_webSocket.sendTextMessage(json.toUtf8());
 }
 
 WSClient::~WSClient()

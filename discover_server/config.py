@@ -4,5 +4,5 @@ server_address = ('', 13334)
 debug_output = True
 
 server_list = [
-    ('127.0.0.1', '13666'),
+    ('128.73.227.102', '3000'),
 ]

@@ -33,6 +33,8 @@ Form::Form(QWidget *parent) :
     connect(pManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(authorizationReply(QNetworkReply*)));
 
     gameManager = new QNetworkAccessManager();
+
+    opponentName = "";
 }
 
 void Form::authorize(QString address, QString login, QString password)
@@ -114,6 +116,16 @@ void Form::paintEvent(QPaintEvent *event)
     else {
         drawField(this->playerGameField, offsetX);
         drawField(this->friendGameField, offsetX2);
+        if (opponentName != "") {
+            QPainter painter(this);
+            painter.setPen(QPen(Qt::black, 1, Qt::SolidLine, Qt::SquareCap));
+            QFont font = painter.font();
+            font.setPixelSize(12);
+            painter.setFont(font);
+            painter.drawText(300, 0, 300, 30,
+                             Qt::AlignHCenter | Qt::AlignVCenter,
+                             this->opponentName);
+        }
     }
 }
 
@@ -180,8 +192,9 @@ void Form::connectToGameServer()
     wsclient = new WSClient(QUrl("ws://" + server_ip), token, game_id, join_token);
     connect(wsclient, SIGNAL(refused()), this, SLOT(connectionRefused()));
     connect(wsclient, SIGNAL(connected()), this, SLOT(connected()));
-    connect(wsclient, SIGNAL(opponent_connected()), this, SLOT(opponentConnected()));
-    connect(wsclient, SIGNAL(opponent_moved_block(int[][16])), this, SLOT(updateOpponentsField(int[][16])));
+    connect(wsclient, SIGNAL(opponent_connected(QString)), this, SLOT(opponentConnected(QString)));
+    connect(wsclient, SIGNAL(opponent_lost()), this, SLOT(opponentLost()));
+    connect(wsclient, SIGNAL(opponent_moved_block(int[][10])), this, SLOT(updateOpponentsField(int[][10])));
     wsclient->Open();
 }
 
@@ -222,8 +235,8 @@ void Form::gameCreated(QNetworkReply * reply)
 
         wsclient = new WSClient(QUrl("ws://" + server_ip), token, game_id, create_token);
         connect(wsclient, SIGNAL(refused()), this, SLOT(serverRefused()));
-        connect(wsclient, SIGNAL(opponent_connected()), this, SLOT(opponentConnected()));
-        connect(wsclient, SIGNAL(opponent_moved_block(int[][16])), this, SLOT(updateOpponentsField(int[][16])));
+        connect(wsclient, SIGNAL(opponent_connected(QString)), this, SLOT(opponentConnected(QString)));
+        connect(wsclient, SIGNAL(opponent_moved_block(int[][10])), this, SLOT(updateOpponentsField(int[][10])));
         wsclient->Open();
     }
     else {
@@ -237,20 +250,26 @@ void Form::serverRefused()
     findGame();
 }
 
-void Form::updateOpponentsField(int field[][16])
+void Form::updateOpponentsField(int field[][10])
 {
     for (int r = 0; r < fieldHeight; r++)
         for (int c =0; c < fieldWidth; c++)
             this->friendGameField[r][c] = field[r][c];
 }
 
-void Form::opponentConnected()
+void Form::opponentConnected(QString name)
 {
     qDebug() << "gameStart!!!";
+    this->opponentName = name;
     setMessage("");
     newGame();
     this->setFocus();
     dropRandomBlock();
+}
+
+void Form::opponentLost()
+{
+    this->gameOver(false);
 }
 
 void Form::processPendingDatagrams()
@@ -290,6 +309,7 @@ void Form::drawMessage()
         painter.drawText(0, 200, 600, 200,
                          Qt::AlignHCenter | Qt::AlignVCenter,
                          submessage);
+
 }
 
 void Form::setMessage(QString message)
@@ -435,8 +455,10 @@ void Form::gameOver(bool loose)
     qDebug() << "game over";
     this->gameIsOver = true;
     _timer.stop();
-    if (loose)
+    if (loose){
         setMessage("You lost");
+        wsclient->sendGameOver();
+    }
     else
         setMessage("You won!");
     setSubmessage("--press Enter to find new game--");
@@ -450,6 +472,7 @@ void Form::Ready()
 
 void Form::timerEvent(QTimerEvent * ev) {
     if (ev->timerId() == _timer.timerId()) {
+        wsclient->sendGameField(this->playerGameField);
         updateField(this->playerGameField);
         update();
     }

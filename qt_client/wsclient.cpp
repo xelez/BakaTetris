@@ -79,7 +79,8 @@ void WSClient::sendGameOver()
 
 void WSClient::sendGameField(int field[][fieldWidth])
 {
-    QString json = "{ \"field\" : [ ";
+    QString json = "{ \"msg_type\" : \"game\", \
+                   "\"field\" : [ ";
     for (int i = 0; i < 16; i++)
         for (int j = 0; j < 10; j++)
         {

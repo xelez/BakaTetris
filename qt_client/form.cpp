@@ -9,6 +9,7 @@ Form::Form(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::Form)
 {
+    wsclient = NULL;
     ui->setupUi(this);
 
     ui->passwordTxt->setEchoMode(QLineEdit::Password);

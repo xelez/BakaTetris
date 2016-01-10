@@ -35,6 +35,9 @@ Form::Form(QWidget *parent) :
     gameManager = new QNetworkAccessManager();
 
     opponentName = "";
+
+    //WSClient
+    wsclient = NULL;
 }
 
 void Form::authorize(QString address, QString login, QString password)

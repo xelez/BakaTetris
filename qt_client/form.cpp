@@ -39,6 +39,7 @@ Form::Form(QWidget *parent) :
 
     //WSClient
     wsclient = NULL;
+    cd = 4;
 }
 
 void Form::authorize(QString address, QString login, QString password)

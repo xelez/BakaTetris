@@ -271,7 +271,6 @@ void Form::opponentConnected(QString name)
     setMessage("");
     newGame();
     this->setFocus();
-    dropRandomBlock();
 }
 
 void Form::opponentLost()
@@ -475,6 +474,7 @@ void Form::gameOver(bool loose)
 void Form::Ready()
 {
     setMessage("");
+    dropRandomBlock();
 }
 
 void Form::timerEvent(QTimerEvent * ev) {
@@ -573,6 +573,7 @@ void Form::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Return:
             if (gameIsOver)
             {
+                gameIsOver = false;
                 findGame();
             }
         break;

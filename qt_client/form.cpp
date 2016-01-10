@@ -267,8 +267,9 @@ void Form::updateOpponentsField()
 void Form::opponentConnected(QString name)
 {
     qDebug() << "gameStart!!!";
+    setMessage("Opponent found!");
+    _countdown.start(1000, this);
     this->opponentName = name;
-    setMessage("");
     newGame();
     this->setFocus();
 }
@@ -473,7 +474,9 @@ void Form::gameOver(bool loose)
 
 void Form::Ready()
 {
+    qDebug() << "ready" << endl;
     setMessage("");
+    _countdown.stop();
     dropRandomBlock();
 }
 
@@ -571,9 +574,9 @@ void Form::keyPressEvent(QKeyEvent *event)
             rotateIfCan(this->playerGameField);
         break;
         case Qt::Key_Return:
-            if (gameIsOver)
+            if (submessage == "--press Enter to find new game--")
             {
-                gameIsOver = false;
+                setSubmessage("");
                 findGame();
             }
         break;

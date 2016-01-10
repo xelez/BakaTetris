@@ -553,8 +553,6 @@ void Form::checkLines(int field[][fieldWidth])
 
 void Form::keyPressEvent(QKeyEvent *event)
 {
-    if (this->gameIsOver)
-        return;
     qDebug() << "key_press" << "\n";
     switch(event->key())
     {

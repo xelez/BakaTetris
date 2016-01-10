@@ -5,6 +5,10 @@ WSClient::WSClient(const QUrl &url, QString auth_token, QString game_id, QString
     QObject(parent),
     m_url(url)
 {
+    for (int i = 0; i < 16; i++)
+        for (int j = 0; j < 10; j++) {
+            field[i][j] = 0;
+        }
     this->auth_token = auth_token;
     this->game_id = game_id;
     this->game_token = game_token;
@@ -55,11 +59,6 @@ void WSClient::onTextMessageReceived(QString message)
     }
     else if (msg_type == "game")
     {
-        int field[16][10];
-        for (int i = 0; i < 16; i++)
-            for (int j = 0; j < 10; j++) {
-                field[i][j] = 0;
-            }
         QJsonArray array = jsonObject["field"].toArray();
         int x = 0;
         foreach (const QJsonValue & value, array) {

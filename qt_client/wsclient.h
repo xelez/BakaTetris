@@ -40,6 +40,7 @@ private:
     QString game_token;
 
     QUrl m_url;
+    int field[16][10];
 };
 
 #endif // WSCLIENT_H

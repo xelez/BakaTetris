@@ -468,7 +468,7 @@ void Form::gameOver(bool loose)
     else
         setMessage("You won!");
     setSubmessage("--press Enter to find new game--");
-
+    this->setFocus();
 }
 
 void Form::Ready()

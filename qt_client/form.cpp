@@ -238,8 +238,10 @@ void Form::gameCreated(QNetworkReply * reply)
         create_token = jsonObject["create_token"].toString();
 
         wsclient = new WSClient(QUrl("ws://" + server_ip), token, game_id, create_token);
-        connect(wsclient, SIGNAL(refused()), this, SLOT(serverRefused()));
+        connect(wsclient, SIGNAL(refused()), this, SLOT(connectionRefused()));
+        connect(wsclient, SIGNAL(connected()), this, SLOT(connected()));
         connect(wsclient, SIGNAL(opponent_connected(QString)), this, SLOT(opponentConnected(QString)));
+        connect(wsclient, SIGNAL(opponent_lost()), this, SLOT(opponentLost()));
         connect(wsclient, SIGNAL(opponent_moved_block(int[][10])), this, SLOT(updateOpponentsField(int[][10])));
         wsclient->Open();
     }

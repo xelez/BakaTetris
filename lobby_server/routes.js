@@ -53,7 +53,7 @@ router.post('/signin', function(req, res, next) {
 });
 
 router.all('/game*', function(req, res, next) {
-    var token = req.body.token;
+    var token = req.body.token || req.query.token || req.body.auth_token || req.query.auth_token;
     if (!token)
         return next(new HttpError(400));
 
@@ -79,6 +79,8 @@ router.get('/games/open', function(req, res) {
         })
     .toArray(function(err, items) {
         if (err) throw err;
+        for (var i = 0; i < items.length; ++i)
+            items[i].id = items[i]['_id'];
         res.json(items);
     });
 });

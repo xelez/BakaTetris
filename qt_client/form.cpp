@@ -198,7 +198,7 @@ void Form::connectToGameServer()
     connect(wsclient, SIGNAL(connected()), this, SLOT(connected()));
     connect(wsclient, SIGNAL(opponent_connected(QString)), this, SLOT(opponentConnected(QString)));
     connect(wsclient, SIGNAL(opponent_lost()), this, SLOT(opponentLost()));
-    connect(wsclient, SIGNAL(opponent_moved_block(int[][10])), this, SLOT(updateOpponentsField(int[][10])));
+    connect(wsclient, SIGNAL(opponent_moved_block()), this, SLOT(updateOpponentsField()));
     wsclient->Open();
 }
 
@@ -242,7 +242,7 @@ void Form::gameCreated(QNetworkReply * reply)
         connect(wsclient, SIGNAL(connected()), this, SLOT(connected()));
         connect(wsclient, SIGNAL(opponent_connected(QString)), this, SLOT(opponentConnected(QString)));
         connect(wsclient, SIGNAL(opponent_lost()), this, SLOT(opponentLost()));
-        connect(wsclient, SIGNAL(opponent_moved_block(int[][10])), this, SLOT(updateOpponentsField(int[][10])));
+        connect(wsclient, SIGNAL(opponent_moved_block()), this, SLOT(updateOpponentsField()));
         wsclient->Open();
     }
     else {
@@ -256,11 +256,11 @@ void Form::serverRefused()
     findGame();
 }
 
-void Form::updateOpponentsField(int field[][10])
+void Form::updateOpponentsField()
 {
     for (int r = 0; r < fieldHeight; r++)
         for (int c =0; c < fieldWidth; c++)
-            this->friendGameField[r][c] = field[r][c];
+            this->friendGameField[r][c] = wsclient->field[r][c];
 }
 
 void Form::opponentConnected(QString name)

@@ -18,6 +18,7 @@ public:
     void Open();
     void sendGameOver();
     void sendGameField(int field[][fieldWidth]);
+    int field[16][10];
     ~WSClient();
 
 Q_SIGNALS:
@@ -25,7 +26,7 @@ Q_SIGNALS:
     void connected();
     void opponent_connected(QString name);
     void opponent_lost();
-    void opponent_moved_block(int [][10]);
+    void opponent_moved_block();
 
 private Q_SLOTS:
     void closedWS();
@@ -40,7 +41,6 @@ private:
     QString game_token;
 
     QUrl m_url;
-    int field[16][10];
 };
 
 #endif // WSCLIENT_H

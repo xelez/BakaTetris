@@ -116,7 +116,7 @@ private slots:
 
     void connectionRefused();
     void connected();
-    void updateOpponentsField(int field[][10]);
+    void updateOpponentsField();
     void serverRefused();
 protected:
     void paintEvent(QPaintEvent *event);

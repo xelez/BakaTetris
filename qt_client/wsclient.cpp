@@ -66,7 +66,7 @@ void WSClient::onTextMessageReceived(QString message)
             field[x / 10][x % 10] = obj["n"].toInt();
             x++;
         }
-        emit opponent_moved_block(field);
+        emit opponent_moved_block();
     }
 }
 

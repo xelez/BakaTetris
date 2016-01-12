@@ -4,6 +4,7 @@
 #include <QKeyEvent>
 #include <QTime>
 #include <QMessageBox>
+#include <QNetworkInterface>
 
 Form::Form(QWidget *parent) :
     QDialog(parent),
@@ -18,16 +19,27 @@ Form::Form(QWidget *parent) :
     connect(ui->loginBtn, SIGNAL(clicked()), this, SLOT(authorizeBtnClicked()));
     connect(ui->regBtn, SIGNAL(clicked()), this, SLOT(registerBtnClicked()));
 
+
+
     udpSocket = new QUdpSocket(this);
     udpSocket->bind(QHostAddress::AnyIPv4, 13333);
     connect(udpSocket, SIGNAL(readyRead()), this, SLOT(processPendingDatagrams()));
 
     qsrand((uint)QTime::currentTime().msec());
     setMessage("Authorization");
+
     //UDP
-    QHostAddress group = QHostAddress("224.0.0.111");
+    //QHostAddress group = QHostAddress("224.0.0.111");
     QByteArray datagram = "hello";
-    udpSocket->writeDatagram(datagram, group, 13334);
+    //udpSocket->writeDatagram(datagram, group, 13334);
+    QList<QNetworkInterface> ifaces = QNetworkInterface::allInterfaces();
+    for (int i = 0; i < ifaces.size(); i++)
+    {
+        QList<QNetworkAddressEntry> addrs = ifaces[i].addressEntries();
+        for (int j = 0; j < addrs.size(); j++)
+            if ((addrs[j].ip().protocol() == QAbstractSocket::IPv4Protocol) && (addrs[j].broadcast().toString() != ""))
+                udpSocket->writeDatagram(datagram, addrs[j].broadcast(), 13334);
+    }
 
     //REST
     pManager = new QNetworkAccessManager();
@@ -190,9 +202,16 @@ void Form::connectToGameServer()
         server_ip  = obj["server_ip"].toString();
         join_token = obj["join_token"].toString();
     }
-    if (wsclient)
-        delete wsclient;
-    openGames.erase(openGames.begin());
+    if (wsclient != NULL)
+    {
+        disconnect(wsclient, SIGNAL(refused()), this, SLOT(connectionRefused()));
+        disconnect(wsclient, SIGNAL(connected()), this, SLOT(connected()));
+        disconnect(wsclient, SIGNAL(opponent_connected(QString)), this, SLOT(opponentConnected(QString)));
+        disconnect(wsclient, SIGNAL(opponent_lost()), this, SLOT(opponentLost()));
+        disconnect(wsclient, SIGNAL(opponent_moved_block()), this, SLOT(updateOpponentsField()));
+    }
+    if (openGames.size() > 0)
+        openGames.erase(openGames.begin());
 
     wsclient = new WSClient(QUrl("ws://" + server_ip), token, game_id, join_token);
     connect(wsclient, SIGNAL(refused()), this, SLOT(connectionRefused()));
@@ -238,6 +257,14 @@ void Form::gameCreated(QNetworkReply * reply)
         server_ip  = jsonObject["server_ip"].toString();
         create_token = jsonObject["create_token"].toString();
 
+        if (wsclient != NULL)
+        {
+            disconnect(wsclient, SIGNAL(refused()), this, SLOT(connectionRefused()));
+            disconnect(wsclient, SIGNAL(connected()), this, SLOT(connected()));
+            disconnect(wsclient, SIGNAL(opponent_connected(QString)), this, SLOT(opponentConnected(QString)));
+            disconnect(wsclient, SIGNAL(opponent_lost()), this, SLOT(opponentLost()));
+            disconnect(wsclient, SIGNAL(opponent_moved_block()), this, SLOT(updateOpponentsField()));
+        }
         wsclient = new WSClient(QUrl("ws://" + server_ip), token, game_id, create_token);
         connect(wsclient, SIGNAL(refused()), this, SLOT(connectionRefused()));
         connect(wsclient, SIGNAL(connected()), this, SLOT(connected()));
@@ -464,7 +491,8 @@ void Form::gameOver(bool loose)
     _timer.stop();
     if (loose){
         setMessage("You lost");
-        wsclient->sendGameOver();
+        if (wsclient != NULL)
+            wsclient->sendGameOver();
     }
     else
         setMessage("You won!");
@@ -482,7 +510,8 @@ void Form::Ready()
 
 void Form::timerEvent(QTimerEvent * ev) {
     if (ev->timerId() == _timer.timerId()) {
-        wsclient->sendGameField(this->playerGameField);
+        if (wsclient != NULL)
+            wsclient->sendGameField(this->playerGameField);
         updateField(this->playerGameField);
         update();
     }

@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QNetworkInterface>
 
 #include <QMessageBox>
 
@@ -10,9 +11,18 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     udpSocket = new QUdpSocket(this);
-    //udpSocket->setSocketOption(QAbstractSocket::MulticastTtlOption, 1);
-    udpSocket->bind(QHostAddress::AnyIPv4, 13333);
-    //udpSocket->joinMulticastGroup(group);
+    udpSocket->setSocketOption(QAbstractSocket::MulticastTtlOption, 1);
+    udpSocket->bind(QHostAddress::AnyIPv4, 13333, QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint);
+
+    QHostAddress group = QHostAddress("224.0.0.111");
+    QList<QNetworkInterface> mListIfaces = QNetworkInterface::allInterfaces();
+    for (int i = 0; i < mListIfaces.length(); i++)
+    {
+        i = 4;
+        qDebug() << mListIfaces.at(i).humanReadableName();
+        qDebug() << udpSocket->joinMulticastGroup(group, mListIfaces.at(i));
+        break;
+    }
 
     connect(udpSocket, SIGNAL(readyRead()), this, SLOT(processPendingDatagrams()));
 }
@@ -26,6 +36,7 @@ void MainWindow::on_pushButton_clicked()
 {
     QHostAddress group = QHostAddress("224.0.0.111");
     QByteArray datagram = "hello";
+    //udpSocket->joinMulticastGroup(group);
     udpSocket->writeDatagram(datagram, group, 13334);
 }
 

@@ -173,6 +173,8 @@ void Form::newGame()
 void Form::gamesFound(QNetworkReply * reply)
 {
     qDebug() << "gamesFound";
+    _timer.stop();
+    _countdown.stop();
     setSubmessage("");
     setMessage("Looking for opponent...");
     if (reply->error() == QNetworkReply::NoError)
@@ -191,11 +193,6 @@ void Form::gamesFound(QNetworkReply * reply)
 void Form::connectToGameServer()
 {
     qDebug() << "connectToGameServer";
-    setSubmessage("");
-    setMessage("Connecting to game server...");
-    _timer.stop();
-    _countdown.stop();
-    newGame();
     if (openGames.count() == 0){
         createGame();
         return;
@@ -230,7 +227,7 @@ void Form::connectToGameServer()
 void Form::connectionRefused()
 {
     qDebug() << "refused";
-    connectToGameServer();
+    findGame();
 }
 
 void Form::connected()

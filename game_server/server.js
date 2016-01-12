@@ -13,6 +13,15 @@ function gen_token() {
     return crypto.randomBytes(16).toString('hex');
 }
 
+function try_parse(msg) {
+    try {
+        return JSON.parse(msg);
+    }
+    catch (e) {
+        return {};
+    }
+}
+
 rabbit.onrequest(function(msg) {
     var g = {
         'id' : msg.game_id,
@@ -49,7 +58,7 @@ wss.on('connection', function connection(ws) {
     }
 
     function handle_handshake(msg) {
-        console.log('recieved handshake: ', msg);
+        console.log('received handshake: ', msg);
         if (msg.msg_type != "handshake")
             return ws.close();
         if (!games.hasOwnProperty(msg.game_id))
@@ -133,8 +142,11 @@ wss.on('connection', function connection(ws) {
 
     ws.on('message', function (data, flags) {
         var msg = {};
-        if (!flags.binary)
-            msg = JSON.parse(data);
+        if (!flags.binary) {
+            console.log('parsing');
+            console.log(data);
+            msg = try_parse(data);
+        }
 
         if (!user) {
             handle_handshake(msg);
@@ -157,6 +169,10 @@ wss.on('connection', function connection(ws) {
     ws.on('close', function() {
         console.log('close ', user);
         if (!user) return;
-        //TODO: handle gracefully? send other player info about it?
+        if (!game) return;
+        if (game.state != 'finished') {
+            handle_lost({});
+            sendToOpponent('{ "msg_type": "lost" }', {});
+        }
     });
 });

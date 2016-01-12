@@ -29,9 +29,9 @@ Form::Form(QWidget *parent) :
     setMessage("Authorization");
 
     //UDP
-    //QHostAddress group = QHostAddress("224.0.0.111");
+    QHostAddress group = QHostAddress("224.0.0.111");
     QByteArray datagram = "hello";
-    //udpSocket->writeDatagram(datagram, group, 13334);
+    udpSocket->writeDatagram(datagram, group, 13334);
     QList<QNetworkInterface> ifaces = QNetworkInterface::allInterfaces();
     for (int i = 0; i < ifaces.size(); i++)
     {
@@ -98,18 +98,28 @@ void Form::authorizationReply(QNetworkReply * reply)
 
 void Form::authorizeBtnClicked()
 {
-    QString login = ui->loginTxt->text().toUtf8();
-    QString password = ui->passwordTxt->text().toUtf8();
-    lobby = lobbies[rand() % lobbies.size()];
-    authorize(lobby + "/signin", login, password);
+    if (lobbies.size() > 0) {
+        QString login = ui->loginTxt->text().toUtf8();
+        QString password = ui->passwordTxt->text().toUtf8();
+        lobby = lobbies[rand() % lobbies.size()];
+        authorize(lobby + "/signin", login, password);
+    }
+    else {
+        setMessage("No lobbies found");
+    }
 }
 
 void Form::registerBtnClicked()
 {
-    QString login = ui->loginTxt->text().toUtf8();
-    QString password = ui->passwordTxt->text().toUtf8();
-    lobby = lobbies[rand() % lobbies.size()];
-    authorize(lobby + "/signup", login, password);
+    if (lobbies.size() > 0) {
+        QString login = ui->loginTxt->text().toUtf8();
+        QString password = ui->passwordTxt->text().toUtf8();
+        lobby = lobbies[rand() % lobbies.size()];
+        authorize(lobby + "/signup", login, password);
+    }
+    else {
+        setMessage("No lobbies found");
+    }
 }
 
 Form::~Form()
@@ -316,6 +326,10 @@ void Form::processPendingDatagrams()
         QHostAddress from;
         udpSocket->readDatagram(datagram.data(), datagram.size(), &from);
 
+        QString server(datagram.data());
+        QStringList arr = server.split(';');
+        for (int i = 0; i < arr.length(); i++)
+            this->lobbies.push_back(arr[i]);
         QString servers_data(datagram.data());
         QStringList servers = servers_data.split(';');
         foreach (const QString &server, servers)
@@ -522,7 +536,7 @@ void Form::timerEvent(QTimerEvent * ev) {
     else if (ev->timerId() == _countdown.timerId()) {
         cd--;
         if (cd != 0)
-            setMessage("Games starts in " + QString::number(cd));
+            setMessage("Game starts in " + QString::number(cd));
         else
             Ready();
     }
@@ -607,7 +621,8 @@ void Form::keyPressEvent(QKeyEvent *event)
             rotateIfCan(this->playerGameField);
         break;
         case Qt::Key_Return:
-            if (submessage == "--press Enter to find new game--")
+            if (submessage == "--press Enter to find new game--" ||
+                submessage == "Server is busy")
             {
                 setSubmessage("");
                 findGame();

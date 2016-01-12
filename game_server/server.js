@@ -13,6 +13,15 @@ function gen_token() {
     return crypto.randomBytes(16).toString('hex');
 }
 
+function try_parse(msg) {
+    try {
+        return JSON.parse(msg);
+    }
+    catch (e) {
+        return {};
+    }
+}
+
 rabbit.onrequest(function(msg) {
     var g = {
         'id' : msg.game_id,
@@ -136,7 +145,7 @@ wss.on('connection', function connection(ws) {
         if (!flags.binary) {
             console.log('parsing');
             console.log(data);
-            msg = JSON.parse(data);
+            msg = try_parse(data);
         }
 
         if (!user) {

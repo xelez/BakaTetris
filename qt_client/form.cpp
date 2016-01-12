@@ -536,7 +536,7 @@ void Form::timerEvent(QTimerEvent * ev) {
     else if (ev->timerId() == _countdown.timerId()) {
         cd--;
         if (cd != 0)
-            setMessage("Games starts in " + QString::number(cd));
+            setMessage("Game starts in " + QString::number(cd));
         else
             Ready();
     }
@@ -621,7 +621,8 @@ void Form::keyPressEvent(QKeyEvent *event)
             rotateIfCan(this->playerGameField);
         break;
         case Qt::Key_Return:
-            if (submessage == "--press Enter to find new game--")
+            if (submessage == "--press Enter to find new game--" ||
+                submessage == "Server is busy")
             {
                 setSubmessage("");
                 findGame();

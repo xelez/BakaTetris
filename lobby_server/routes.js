@@ -142,7 +142,7 @@ rabbit.on('game_ended', function(err, data) {
     var id = ObjectID.createFromHexString(data.game_id);
 
     db.collection('games').updateOne(
-        {'_id' : id, 'state' : 'open'},
+        {'_id' : id},
         {$set : {
             'state' : 'finished',
             'winner': data.winner} });

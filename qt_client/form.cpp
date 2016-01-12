@@ -173,6 +173,8 @@ void Form::newGame()
 void Form::gamesFound(QNetworkReply * reply)
 {
     qDebug() << "gamesFound";
+    _timer.stop();
+    _countdown.stop();
     setSubmessage("");
     setMessage("Looking for opponent...");
     if (reply->error() == QNetworkReply::NoError)
@@ -225,7 +227,7 @@ void Form::connectToGameServer()
 void Form::connectionRefused()
 {
     qDebug() << "refused";
-    connectToGameServer();
+    findGame();
 }
 
 void Form::connected()

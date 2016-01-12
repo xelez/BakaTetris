@@ -316,8 +316,10 @@ void Form::processPendingDatagrams()
         QHostAddress from;
         udpSocket->readDatagram(datagram.data(), datagram.size(), &from);
 
-        QString server(datagram.data());
-        this->lobbies.push_back(server);
+        QString servers_data(datagram.data());
+        QStringList servers = servers_data.split(';');
+        foreach (const QString &server, servers)
+            this->lobbies.push_back(server);
     }
 }
 

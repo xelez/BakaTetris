@@ -326,17 +326,14 @@ void Form::processPendingDatagrams()
         QHostAddress from;
         udpSocket->readDatagram(datagram.data(), datagram.size(), &from);
 
-<<<<<<< HEAD
         QString server(datagram.data());
         QStringList arr = server.split(';');
         for (int i = 0; i < arr.length(); i++)
             this->lobbies.push_back(arr[i]);
-=======
         QString servers_data(datagram.data());
         QStringList servers = servers_data.split(';');
         foreach (const QString &server, servers)
             this->lobbies.push_back(server);
->>>>>>> 5b8506dc7c9f2885f221a2e28bae6b99fd7fa5ab
     }
 }
 

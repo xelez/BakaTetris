@@ -216,12 +216,12 @@ void Form::connectToGameServer()
     }
     if (wsclient != NULL)
     {
-        wsclient->Close();
         disconnect(wsclient, SIGNAL(refused()), this, SLOT(connectionRefused()));
         disconnect(wsclient, SIGNAL(connected()), this, SLOT(connected()));
         disconnect(wsclient, SIGNAL(opponent_connected(QString)), this, SLOT(opponentConnected(QString)));
         disconnect(wsclient, SIGNAL(opponent_lost()), this, SLOT(opponentLost()));
         disconnect(wsclient, SIGNAL(opponent_moved_block()), this, SLOT(updateOpponentsField()));
+        wsclient->Close();
     }
     if (openGames.size() > 0)
         openGames.erase(openGames.begin());
@@ -272,12 +272,12 @@ void Form::gameCreated(QNetworkReply * reply)
 
         if (wsclient != NULL)
         {
-            wsclient->Close();
             disconnect(wsclient, SIGNAL(refused()), this, SLOT(connectionRefused()));
             disconnect(wsclient, SIGNAL(connected()), this, SLOT(connected()));
             disconnect(wsclient, SIGNAL(opponent_connected(QString)), this, SLOT(opponentConnected(QString)));
             disconnect(wsclient, SIGNAL(opponent_lost()), this, SLOT(opponentLost()));
             disconnect(wsclient, SIGNAL(opponent_moved_block()), this, SLOT(updateOpponentsField()));
+            wsclient->Close();
         }
         wsclient = new WSClient(QUrl("ws://" + server_ip), token, game_id, create_token);
         connect(wsclient, SIGNAL(refused()), this, SLOT(connectionRefused()));

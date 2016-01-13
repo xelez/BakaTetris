@@ -21,6 +21,7 @@ public:
     int field[16][10];
     ~WSClient();
 
+    void Close();
 Q_SIGNALS:
     void refused();
     void connected();

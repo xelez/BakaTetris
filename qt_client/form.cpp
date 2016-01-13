@@ -216,6 +216,7 @@ void Form::connectToGameServer()
     }
     if (wsclient != NULL)
     {
+        wsclient->Close();
         disconnect(wsclient, SIGNAL(refused()), this, SLOT(connectionRefused()));
         disconnect(wsclient, SIGNAL(connected()), this, SLOT(connected()));
         disconnect(wsclient, SIGNAL(opponent_connected(QString)), this, SLOT(opponentConnected(QString)));
@@ -271,6 +272,7 @@ void Form::gameCreated(QNetworkReply * reply)
 
         if (wsclient != NULL)
         {
+            wsclient->Close();
             disconnect(wsclient, SIGNAL(refused()), this, SLOT(connectionRefused()));
             disconnect(wsclient, SIGNAL(connected()), this, SLOT(connected()));
             disconnect(wsclient, SIGNAL(opponent_connected(QString)), this, SLOT(opponentConnected(QString)));

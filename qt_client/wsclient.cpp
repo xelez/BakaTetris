@@ -21,6 +21,11 @@ void WSClient::Open()
     m_webSocket.open(QUrl(m_url));
 }
 
+void WSClient::Close()
+{
+    m_webSocket.close();
+}
+
 void WSClient::closedWS()
 {
     m_webSocket.close();

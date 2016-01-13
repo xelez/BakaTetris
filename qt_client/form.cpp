@@ -623,8 +623,8 @@ void Form::keyPressEvent(QKeyEvent *event)
             rotateIfCan(this->playerGameField);
         break;
         case Qt::Key_Return:
-            if (submessage == "--press Enter to find new game--" ||
-                submessage == "Server is busy")
+            if ((submessage == "--press Enter to find new game--" ||
+                submessage == "Server is busy") && message != "")
             {
                 setSubmessage("");
                 findGame();
